@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fable 5.2 — Quality Grade for 3D Modelling | Deep Dive</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e2e2e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.7;max-width:900px;margin:0 auto;padding:2rem 1.5rem}
+h1{font-size:2.4rem;font-weight:800;background:linear-gradient(135deg,#6ee7b7,#3b82f6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem;letter-spacing:-.02em}
+.subtitle{color:#94a3b8;font-size:1.1rem;margin-bottom:2.5rem;font-weight:400}
+.tag{display:inline-block;background:rgba(99,102,241,.15);color:#818cf8;font-size:.75rem;font-weight:600;padding:.25rem .75rem;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+.section{margin-top:3rem}
+.section h2{font-size:1.5rem;font-weight:700;color:#f1f5f9;margin-bottom:1rem;border-left:3px solid #6366f1;padding-left:.75rem}
+.section h3{font-size:1.15rem;font-weight:600;color:#cbd5e1;margin:1.5rem 0 .5rem}
+p{margin-bottom:1rem;color:#cbd5e1}
+.hero-banner{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(16,185,129,.06));border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:2rem;margin-bottom:2.5rem}
+.hero-banner p:first-child{font-size:1.15rem;color:#e2e8f0}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1.5rem 0}
+.kpi-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:1.25rem;text-align:center}
+.kpi-card .value{font-size:1.8rem;font-weight:800;color:#6ee7b7}
+.kpi-card .value.blue{color:#60a5fa}
+.kpi-card .value.purple{color:#a78bfa}
+.kpi-card .label{font-size:.8rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
+.bench-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}
+.bench-table th{text-align:left;background:rgba(99,102,241,.1);color:#a5b4fc;padding:.75rem 1rem;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.bench-table td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);color:#cbd5e1}
+.bench-table tr:hover td{background:rgba(255,255,255,.02)}
+.bench-table .score{font-weight:700;color:#6ee7b7}
+.bench-table .score.opus{color:#60a5fa}
+.bench-table .score.legacy{color:#f59e0b}
+.callout{background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin:1.5rem 0}
+.callout p{color:#fbbf24;font-size:.95rem;margin:0}
+.strengths-list{list-style:none;padding:0;margin:1rem 0}
+.strengths-list li{padding:.6rem 0 .6rem 1.5rem;position:relative;color:#cbd5e1}
+.strengths-list li::before{content:'✓';position:absolute;left:0;color:#6ee7b7;font-weight:700}
+.limitation{background:rgba(239,68,68,.06);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin:1rem 0}
+.limitation p{color:#fca5a5;font-size:.95rem;margin:0}
+.code-block{background:#0d1117;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:1rem 1.25rem;margin:1rem 0;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.82rem;color:#e2e8f0;overflow-x:auto;line-height:1.6}
+.highlight{color:#6ee7b7;font-weight:600}
+.highlight.blue{color:#60a5fa}
+.highlight.purple{color:#a78bfa}
+.highlight.amber{color:#fbbf24}
+.footer-note{margin-top:3rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.06);color:#475569;font-size:.8rem;text-align:center}
+a{color:#818cf8;text-decoration:none}
+a:hover{text-decoration:underline}
+dividend-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem 2rem;margin:1rem 0}
+dividend-grid dt{color:#94a3b8;font-size:.9rem}
+dividend-grid dd{color:#e2e8f0;font-size:.9rem;margin-bottom:.75rem;font-weight:500}
+@media(max-width:600px){h1{font-size:1.8rem}.kpi-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="hero-banner">
+<span class="tag">November 2026</span>
+<h1 style="margin-top:.5rem">Fable 5.2 — Quality Grade for 3D Modelling</h1>
+<p class="subtitle">An in-depth look at how Anthropic's Claude Fable 5.2 performs as a 3D modelling engine, backed by benchmarks, real-world tests, and community showcases.</p>
+</div>
+
+<div class="kpi-grid">
+<div class="kpi-card">
+<div class="value">83.5<span style="font-size:1rem">/100</span></div>
+<div class="label">BenchCAD 2.1 Score</div>
+</div>
+<div class="kpi-card">
+<div class="value blue">41.3%</div>
+<div class="label">Remote Labor Index</div>
+</div>
+<div class="kpi-card">
+<div class="value purple">49.1%</div>
+<div class="label">FrontierCode 2.0</div>
+</div>
+<div class="kpi-card">
+<div class="value">$8<span style="font-size:.9rem;color:#64748b">/$40</span></div>
+<div class="label">Per 1M Tokens (In/Out)</div>
+</div>
+</div>
+
+<!-- SECTION 1: WHAT IS FABLE 5.2 -->
+<div class="section">
+<h2>What Is Fable 5.2?</h2>
+<p>Released by <strong>Anthropic</strong> on <span class="highlight">November 9, 2026</span>, Claude Fable 5.2 is the latest iteration in the Fable family of reasoning models. It represents a generational leap in agentic capabilities — particularly in 3D content creation, game development, and hardware engineering.</p>
+<p>Unlike traditional 3D generation tools that rely on <span class="highlight">pixel-diffusion black boxes</span> or pre-trained mesh generators, Fable 5.2 takes an entirely different approach: it generates 3D content <span class="highlight blue">purely through code</span>. It writes Python (Blender bpy), WebGL/Three.js, and procedural shaders from text prompts, orchestrating entire 3D pipelines without relying on diffusion-based image-to-3D models.</p>
+<div class="callout">
+<p><strong>Key insight:</strong> Fable 5.2 proves Richard Sutton's "The Bitter Lesson" — a sufficiently capable language model can write ~700,000 procedural brushstrokes, orchestrate Blender Python scenes, and build playable FPS games <em>purely through code</em>, with zero diffusion models used.</p>
+</div>
+</div>
+
+<!-- SECTION 2: BENCHMARKS -->
+<div class="section">
+<h2>3D-Related Benchmarks</h2>
+<p>Fable 5.2's 3D capabilities are measured across several benchmarks. Here's a side-by-side comparison with its predecessors and competitors:</p>
+
+<h3>BenchCAD 2.1 — Hardware Engineering & 3D Geometry</h3>
+<p>BenchCAD 2.1 measures how closely a model's 3D designs match reference geometry, circuit boards, and assemblies. Scored 0–100.</p>
+<table class="bench-table">
+<thead><tr><th>Model</th><th>Score</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><strong>Claude Fable 5.2</strong> (Max)</td><td class="score">83.5</td><td>Routes 4-layer PCBs, models enclosures with CAD</td></tr>
+<tr><td>Claude Opus 5.5</td><td class="opus">65.3</td><td>–</td></tr>
+<tr><td>Claude Fable 5.1</td><td class="legacy">44.4</td><td>Nearly doubled with 5.2</td></tr>
+</tbody>
+</table>
+
+<h3>Remote Labor Index (RLI) — Real Freelance Work</h3>
+<p>Run by <strong>Scale Labs</strong> and the <strong>Center for AI Safety</strong>. Measures how often AI agents complete <span class="highlight">real paid freelance projects</span> to a quality level a paying client would accept. Uses 240 real Upwork projects ($144K total value) across video editing, CAD design, game dev, and data analysis. Agents work in virtual workspaces with <span class="highlight blue">Blender, GIMP, and Audacity</span>.</p>
+<table class="bench-table">
+<thead><tr><th>Model</th><th>Completion Rate</th></tr></thead>
+<tbody>
+<tr><td><strong>Claude Fable 5.2</strong></td><td class="score">41.3%</td></tr>
+<tr><td>Claude Opus 5.5</td><td class="opus">21.25%</td></tr>
+<tr><td>OpenAI GPT-6 Astra</td><td class="opus">20.83%</td></tr>
+<tr><td>Google Gemini 4 Argon</td><td>17.08%</td></tr>
+<tr><td>Manus (prev. champion)</td><td class="legacy">2.5%</td></tr>
+</tbody>
+</table>
+<p>Fable 5.2's biggest gains came in <span class="highlight">3D modeling</span>, architecture & interior design, and audio editing. Nearly 50 of its successful completions were projects no previous AI agent had ever solved.</p>
+
+<h3>FrontierCode 2.0 — Code Quality & Mergability</h3>
+<p>Evaluates whether maintainers of open-source projects would merge a model's code changes. Fable 5.2 scored <span class="highlight">49.1%</span> at Max, significantly ahead of Opus 5.5 (45.5%) and Fable 5.1 (32.4%).</p>
+
+<h3>LuminaBench Creation Index (3D Task)</h3>
+<p>Anthropic's own curated 3D creation tests — voxel pagodas, 3D seaplanes, and kart-racing games. Fable 5.2 at High effort scored <span class="highlight">1,115</span> on the 3D index, 18 points above Opus 5.5 xHigh.</p>
+<table class="bench-table">
+<thead><tr><th>Effort</th><th>Voxel</th><th>3D</th><th>GameDev</th><th>Mean</th></tr></thead>
+<tbody>
+<tr><td>Low</td><td>1,097</td><td class="score">1,100</td><td>1,098</td><td>1,098</td></tr>
+<tr><td>Medium</td><td>1,105</td><td class="score">1,107</td><td>1,108</td><td>1,107</td></tr>
+<tr><td>High</td><td>1,114</td><td class="score">1,115</td><td>1,118</td><td>1,116</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- SECTION 3: HOW IT WORKS -->
+<div class="section">
+<h2>How Fable 5.2 Generates 3D Content</h2>
+<p>Fable 5.2 doesn't produce meshes through a neural network that maps images to 3D. Instead, it <span class="highlight blue">writes code that constructs 3D scenes programmatically</span>:</p>
+
+<h3>1. Blender Python (bpy) Pipeline</h3>
+<p>Fable 5.2 writes complete Blender scripts — the <code>bpy</code> Python API — that create vertices, edges, faces, materials, lighting, and camera angles. These scripts can:</p>
+<ul class="strengths-list">
+<li>Create <strong>complete 3D scenes</strong> (furniture, environments, characters) from natural language prompts</li>
+<li>Rig characters with <strong>inverse kinematics</strong> (e.g., a pelican with webbed feet synced to bicycle pedals)</li>
+<li>Apply <strong>PBR materials</strong> (physically-based rendering) — clearcoat paint, glass refraction, rubber tyres</li>
+<li>Set up <strong>lighting and rendering</strong> (volumetric fog, depth-of-field, ray-traced reflections)</li>
+<li>Generate <strong>geometry nodes</strong> for procedural clumping, displacement shaders, and feather generation</li>
+</ul>
+
+<h3>2. WebGL / Three.js for Browser 3D</h3>
+<p>Fable 5.2 can build complete interactive 3D games in a single prompt. The most famous example is <strong>"Saltline"</strong> — a rain-soaked FPS set in a container yard:</p>
+<ul class="strengths-list">
+<li>Custom 3D models and environment geometry built from scratch</li>
+<li>Wet-surface <strong>PBR normal maps</strong> on weapon rails</li>
+<li>Holographic HUD, physics simulation, and spatial audio</li>
+<li>Procedural container yard geometry and volumetric dusk clouds</li>
+<li>Built by Felix Rieseberg in a single <strong>8-hour autonomous run</strong> (~$550, ~2.7M output tokens, heavily cached)</li>
+</ul>
+
+<h3>3. Procedural Art Engine</h3>
+<p>Fable 5.2 wrote a complete procedural painting engine in Python that calculates <span class="highlight">3D ray-plane intersections</span> for a shopping cart wire cage, concrete specular stains, and <strong>~700,000 layered micro-strokes</strong> in a Level 4 Parking Garage painting — with zero diffusion models.</p>
+</div>
+
+<!-- SECTION 4: EFFORT LEVELS -->
+<div class="section">
+<h2>Effort Levels & Quality Tiers</h2>
+<p>Fable 5.2 offers multiple effort settings that trade speed for output quality. For 3D work, the tiers are particularly meaningful:</p>
+
+<table class="bench-table">
+<thead><tr><th>Effort</th><th>Use Case</th><th>Quality</th><th>Speed</th><th>Cost (per 1M out)</th></tr></thead>
+<tbody>
+<tr><td><strong>Low</strong></td><td>Prototyping, blockouts</td><td>Good baseline</td><td>Faster</td><td>$40</td></tr>
+<tr><td><strong>Medium</strong> (default)</td><td>Most production work</td><td>Very good</td><td>~1.3× slower</td><td>$40</td></tr>
+<tr><td><strong>High</strong></td><td>Final assets, client delivery</td><td>Excellent</td><td>~1.7× slower</td><td>$40</td></tr>
+<tr><td><strong>XHigh / Max</strong></td><td>Thorniest problems, polish</td><td>Best possible</td><td>Slowest</td><td>$40</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<p><strong>Community finding:</strong> For most 3D work, Low and Medium effort are "more than enough" — the difference to High is marginal on most tasks. XHigh/Max is only worth it for extremely thorny problems like complex character rigging or multi-scene film sequences.</p>
+</div>
+</div>
+
+<!-- SECTION 5: REAL-WORLD DEMOS -->
+<div class="section">
+<h2>Real-World 3D Demos & Showcases</h2>
+
+<h3>🏗️ Saltline FPS (Felix Rieseberg)</h3>
+<p>The most jaw-dropping demonstration. One unassisted prompt, 8 hours of autonomous generation:</p>
+<ul class="strengths-list">
+<li>Complete 3D game engine architecture</li>
+<li>Procedural container yard geometry</li>
+<li>Wet-surface PBR normal maps on weapon rails</li>
+<li>Volumetric dusk clouds and rain</li>
+<li>Custom 3D character models with HUD and gameplay loop</li>
+<li>Total cost: ~$550 at API pricing, ~2.7M output tokens</li>
+</ul>
+
+<h3>🐦 Pelican on a Bicycle (3D IK Rig)</h3>
+<p>Fable 5.2 didn't just draw a 2D SVG — it orchestrated a full <strong>3D rigged pelican</strong> with layered plumage, a diamond bicycle frame geometry, spoked wheels with orange reflectors, and <strong>physically accurate pedaling kinematics</strong> via two-bone leg IK synchronized to crank rotation — without mesh self-intersection.</p>
+
+<h3>🏠 Blender Bedroom Scene</h3>
+<p>Felix Rieseberg demonstrated recursive complexity: Fable 5.2 modeled the exterior architectural room and lighting, wrote a separate UI/3D telemetry dashboard (16:02, 5,366 polygons, live wireframe) mapped as a dynamic texture onto the laptop display, and scripted a multi-shot camera timeline for a short film.</p>
+
+<h3>🎨 700K Simulated Brushstrokes (Parking Garage Painting)</h3>
+<p>A complete procedural painting engine in Python — 3D ray-plane intersections for a shopping cart wire cage, concrete specular stains, and ~700,000 layered micro-strokes. No diffusion models. Pure computation.</p>
+
+<h3>🚗 Tesla Roadster (Photorealistic Browser 3D)</h3>
+<p>Fable 5.2 modeled the new Tesla Roadster in Blender from scratch with:</p>
+<ul class="strengths-list">
+<li>Physically-based car paint with clear coat</li>
+<li>Real glass with refraction</li>
+<li>Rubber tyres with sidewall detail</li>
+<li>Brake discs and calipers</li>
+<li>Panel gaps, believable environment lighting</li>
+<li>Real shadows and reflections, filmic color grading</li>
+</ul>
+</div>
+
+<!-- SECTION 6: WHAT IT MEANS -->
+<div class="section">
+<h2>What "Fable 5.2 Quality Grade" Means for 3D Work</h2>
+<p>The phrase "quality grade" in the context of Fable 5.2 and 3D modelling refers to several interconnected dimensions:</p>
+
+<h3>📐 Geometric Accuracy (BenchCAD 2.1 → 83.5/100)</h3>
+<p>Fable 5.2 can reconstruct 3D parts, assemblies, and circuit boards from drawings and images with high fidelity. At Max effort, it routed <strong>four-layer PCBs</strong>, designed enclosures with CAD, and produced software for each device — all from a single paragraph prompt. Each board was ready for manufacturing in under a day.</p>
+
+<h3>🎭 Aesthetic Quality (LuminaBench 3D Index → 1,115)</h3>
+<p>The seaplane test case: "The aircraft sits properly in the scene, the water catches the low sun, and the islands give the camera something to work with. There's a consistent look to the aircraft, environment and controls." This is judged by human curators on visual coherence, lighting, atmosphere, and detail.</p>
+
+<h3>🔧 Functional Completeness (Remote Labor Index → 41.3%)</h3>
+<p>Fable 5.2 doesn't just make pretty models — it makes <span class="highlight blue">usable, working 3D projects</span>. The RLI tests whether completed Blender projects are actually functional, properly structured, and of sufficient quality for paying clients to accept.</p>
+
+<h3>⚡ Production Viability (FrontierCode 2.0 → 49.1%)</h3>
+<p>Code quality and mergeability. Can Fable 5.2's Blender scripts and Three.js code actually run in production? Can they be reviewed, tested, and merged into a real project? Nearly half pass this standard — the highest of any model tested.</p>
+
+<h3>🤝 Autonomous Capability (Self-Renting GPUs)</h3>
+<p>In a live stream demonstration, Fable 5.2 <span class="highlight">rented 10 RunPod GPUs</span>, built a 13-shot Blender scene, and rendered it in 4K for <strong>$5.75 in 52 minutes</strong>, then added music through ElevenLabs — entirely autonomously. This is a new paradigm: the AI is not just generating models, it's managing its own computational infrastructure.</p>
+</div>
+
+<!-- SECTION 7: LIMITATIONS -->
+<div class="section">
+<h2>Limitations & Where It Struggles</h2>
+<p>Fable 5.2 is impressive but not perfect. The community has identified specific areas:</p>
+
+<table class="bench-table">
+<thead><tr><th>Area</th><th>Issue</th><th>Severity</th></tr></thead>
+<tbody>
+<tr><td>Animation</td><td>Industrial product design and complex animation remain areas the model can barely handle</td><td class="highlight amber">High</td></tr>
+<tr><td>Character Arms</td><td>Video tests showed some character anatomy issues (arms, hands still imperfect)</td><td class="highlight amber">Medium</td></tr>
+<tr><td>Surface Detail</td><td>Some surfaces appear flat (e.g., coffee in mug looked like a flat surface with no character)</td><td class="highlight amber">Low</td></tr>
+<tr><td>Camera Angles</td><td>Rendering angles sometimes miss the best perspective; handles are clipped into objects</td><td class="highlight amber">Low</td></tr>
+<tr><td>Cost at Max</td><td>High effort can cost 63%+ more per task than Fable 5.1; 8-hour runs can exceed $500</td><td class="highlight amber">Medium</td></tr>
+<tr><td>Consistency</td><td>Scored 76.2% consistency on accounting tests (similar variability likely in 3D)</td><td class="highlight amber">Medium</td></tr>
+</tbody>
+</table>
+
+<div class="limitation">
+<p><strong>Important caveat:</strong> Fable 5.2 is less consistent than Fable 5.1 in some domains (e.g., accounting: 76.2% vs 80.2%). While no direct consistency metric exists for 3D output, the same pattern suggests repeated generations on the same prompt may yield variable quality.</p>
+</div>
+</div>
+
+<!-- SECTION 8: COMPARISON -->
+<div class="section">
+<h2>Fable 5.2 vs. The Competition</h2>
+<table class="bench-table">
+<thead><tr><th>Aspect</th><th>Fable 5.2</th><th>Opus 5.5</th><th>GPT-6 Astra</th></tr></thead>
+<tbody>
+<tr><td>Approach</td><td>Pure code (bpy, Three.js)</td><td>Pure code (shorter horizon)</td><td>99.2% watertight manifold meshes</td></tr>
+<tr><td>BenchCAD 2.1</td><td class="score">83.5</td><td class="opus">65.3</td><td>—</td></tr>
+<tr><td>RLI (Freelance)</td><td class="score">41.3%</td><td class="opus">21.25%</td><td class="opus">20.83%</td></tr>
+<tr><td>FrontierCode 2.0</td><td class="score">49.1%</td><td class="opus">45.5%</td><td>~48.5%</td></tr>
+<tr><td>Context Window</td><td>1M tokens</td><td>500K tokens</td><td>512K tokens</td></tr>
+<tr><td>Max Output</td><td>128K tokens</td><td>64K tokens</td><td>64K tokens</td></tr>
+<tr><td>API Cost (In/Out)</td><td>$8 / $40</td><td>$15 / $75</td><td>$10 / $30</td></tr>
+<tr><td>Longest 3D Run</td><td>8 hours autonomous</td><td>~3 hours</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- SECTION 9: HOW TO USE -->
+<div class="section">
+<h2>How to Access Fable 5.2 for 3D Work</h2>
+
+<h3>API</h3>
+<div class="code-block">
+Model ID: claude-fable-5-2<br>
+Platform: Claude API, AWS Bedrock, Google Cloud, Azure<br>
+Pricing: $8/M input tokens (cached: $0.20/M read) + $40/M output tokens
+</div>
+
+<h3>Recommended Workflow for 3D Modelling</h3>
+<ol style="margin:1rem 0;padding-left:1.5rem;color:#cbd5e1">
+<li style="margin-bottom:.5rem"><strong>Low effort</strong> for rapid prototyping and blockout scenes — good enough to evaluate composition and layout</li>
+<li style="margin-bottom:.5rem"><strong>Medium effort</strong> for most production work — the sweet spot between cost and quality</li>
+<li style="margin-bottom:.5rem"><strong>High effort</strong> for final client deliverables and scenes requiring maximum visual fidelity</li>
+<li style="margin-bottom:.5rem"><strong>XHigh/Max</strong> only for complex multi-scene sequences, character rigs with IK, or problems that resist Medium</li>
+</ol>
+
+<h3>Ideal Use Cases</h3>
+<ul class="strengths-list">
+<li>Procedural environments and landscapes (terrain, foliage, architecture)</li>
+<li>Game-ready assets with PBR materials</li>
+<li>Interactive 3D web experiences (Three.js, WebGL)</li>
+<li>Hardware enclosures and PCB design (BenchCAD workflow)</li>
+<li>Automated Blender rendering pipelines</li>
+<li>One-shot complete 3D projects (FPS games, animated sequences)</li>
+</ul>
+
+<h3>Not Recommended For</h3>
+<ul class="strengths-list">
+<li>Production character animation (still very weak)</li>
+<li>Industrial product design with tight tolerances</li>
+<li>Budget-constrained projects requiring many iterations</li>
+<li>Real-time model generation (8-hour runs are typical for complex scenes)</li>
+</ul>
+</div>
+
+<!-- SECTION 10: CONCLUSION -->
+<div class="section">
+<h2>The Bottom Line</h2>
+<p>"Fable 5.2 quality grade for 3D modelling" represents a <span class="highlight">paradigm shift</span>: a general-purpose reasoning model can generate production-quality 3D content <strong>entirely through code generation</strong>, without dedicated 3D diffusion models. The 83.5 BenchCAD score, 41.3% RLI completion rate, and community showcases (Saltline FPS, 700K brushstrokes, autonomous GPU rental) paint a picture of a tool that is genuinely transforming what's possible with AI-generated 3D.</p>
+<p>It's not a replacement for specialized 3D tools like Meshy, Tripo 3D, or Luma AI for quick mesh generation — those remain faster for simple text-to-mesh tasks. But for <span class="highlight blue">complex, procedural, code-driven 3D work</span> where the output needs to be <em>functional</em> (not just pretty), Fable 5.2 is currently the undisputed leader — and the gap to second place is wide enough to be meaningful.</p>
+</div>
+
+<div class="footer-note">
+Sources: Anthropic (anthropic.com/claude-fable-and-mythos-5-2), LuminaBench, BenchLM, Scale Labs / CAIS, R&D World, FrontierCode (Devin), community showcases (Felix Rieseberg, Riley Brown, Halil Şekeröglü). Data as of November 11, 2026.
+</div>
+
+</body>
+</html>
